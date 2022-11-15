@@ -1,8 +1,9 @@
 import './css/styles.css';
+import { fetchCountries } from "./fetchCountries"
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 let debounce = require('lodash.debounce');
 
-const DEBOUNCE_DELAY = 300;
+const DEBOUNCE_DELAY = 1000;
 
 const refs = {
     searchField: document.querySelector('#search-box'),
@@ -12,18 +13,6 @@ const refs = {
 
 refs.searchField.addEventListener("input", debounce(onSearchFieldInput, DEBOUNCE_DELAY))
 
-
-function fetchCountries(countryName) {
-  return fetch(`https://restcountries.com/v3.1/name/${countryName}`).then(
-    (response) => {
-      if (!response.ok) {
-        throw new Error(response.status);
-      }
-      return response.json();
-    }
-  );
-}
-
 function onSearchFieldInput(event) {
     refs.countriesList.innerHTML = ""
 
@@ -31,29 +20,51 @@ function onSearchFieldInput(event) {
         return
     }
 
-    let countryName = event.target.value.trim();
-    console.log(countryName)
-    fetchCountries(countryName)
-    .then((country) => {
-        console.log(country)
-        renderCountry(country)
+    let enteredInputValue = event.target.value.trim();
+    // console.log(response)
+    fetchCountries(enteredInputValue)
+    .then((response) => {
+      if (response.length >= 2 && response.length < 10) {
+        renderCountresList(response)
+      } else if (response.length > 10) {
+        Notify.info("Too many matches found. Please enter a more specific name.")
+      } else {
+        renderCountry(response)
+      }
     })
-    .catch((error) => console.log(error));
+    .catch((error) => Notify.failure("Oops, there is no country with that name"));
 }
 
 
+function renderCountresList(countries) {
+  const countryListItemMarkup = countries
+  .map((country) => {
+    return `
+    <li class="country-list-item">
+      <div class="country-list-item__wrapper">
+        <img class="country-list-item__flag" src="${country.flags.svg}" alt="Flag of ${country.name.official}">
+        <p class="country-list-item__official-name"><b>${country.name.official}</b></p>
+      </div>
+    </li>
+    `;
+  })
+  .join("");
+  refs.countriesList.innerHTML = countryListItemMarkup;
+}
+
 function renderCountry(country) {
-  const markup = country
+  const countryInfoMarkup = country
     .map((country) => {
       return `
-          <li>
-            <p><img src="${country.flags.svg}" alt="Flag of ${country.name.official}" width="60"><b>${country.name.official}</b></p>
-            <p><b>Capotal</b>: ${country.capital}</p>
-            <p><b>Population </b>: ${country.population}</p>
-            <p><b>Languages</b>: ${Object.values(country.languages).join(", ")}</p>
-          </li>
+        <div class="country-info__wrapper">
+          <img class="country-info__flag" src="${country.flags.svg}" alt="Flag of ${country.name.official}">
+          <p class="country-info__official_name"><b>${country.name.official}</b></p>
+        </div>
+        <p class="country-info__capitall"><b>Capotal</b>: ${country.capital}</p>
+        <p class="country-info__population"><b>Population</b>: ${country.population}</p>
+        <p class="country-info__languages"><b>Languages</b>: ${Object.values(country.languages).join(", ")}</p>
       `;
     })
     .join("");
-  refs.countriesList.innerHTML = markup;
+  refs.countryInfoEl.innerHTML = countryInfoMarkup;
 }

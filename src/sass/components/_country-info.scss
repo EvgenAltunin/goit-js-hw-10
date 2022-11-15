@@ -1,0 +1,16 @@
+.country-info__wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.country-info__flag {
+    display: block;
+    width: 40px;
+    height: 20px;
+}
+
+.country-info__official_name {
+    margin: 0;
+    font-size: 40px;
+}

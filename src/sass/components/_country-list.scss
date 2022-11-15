@@ -1,0 +1,26 @@
+.country-list {
+  padding: 0;
+  list-style: none;
+}
+
+.country-list-item {
+  font-size: large;
+}
+
+.country-list-item__wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.country-list-item__flag {
+  display: block;
+  width: 40px;
+  height: 20px;
+}
+
+.country-list-item__oficcial-name {
+  margin: 0;
+  font-size: 30px;
+}
+ 
