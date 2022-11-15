@@ -1,54 +1,65 @@
 import './css/styles.css';
-import { fetchCountries } from "./fetchCountries"
+import { fetchCountries } from "./fetchCountries";
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 let debounce = require('lodash.debounce');
 
-const DEBOUNCE_DELAY = 1000;
+const DEBOUNCE_DELAY = 300;
 
 const refs = {
-    searchField: document.querySelector('#search-box'),
-    countriesList: document.querySelector('.country-list'),
-    countryInfoEl: document.querySelector('.country-info')
-}
+  searchField: document.querySelector('#search-box'),
+  countriesList: document.querySelector('.country-list'),
+  countryInfoEl: document.querySelector('.country-info')
+};
 
-refs.searchField.addEventListener("input", debounce(onSearchFieldInput, DEBOUNCE_DELAY))
+refs.searchField.addEventListener("input", debounce(onSearchFieldInput, DEBOUNCE_DELAY));
+
+function clearInnerHTML() {
+  refs.countriesList.innerHTML = "";
+  refs.countryInfoEl.innerHTML = "";
+};
 
 function onSearchFieldInput(event) {
-    refs.countriesList.innerHTML = ""
+  clearInnerHTML();
 
-    if (event.target.value.trim() === "") {
-        return
+  if (event.target.value.trim() === "") {
+    return
+  }
+
+  let enteredInputValue = event.target.value.trim();
+
+  fetchCountries(enteredInputValue)
+  .then((response) => {
+    if (response.length >= 2 && response.length < 10) {
+      clearInnerHTML();
+      renderCountresList(response);
+    } else if (response.length > 10) {
+      clearInnerHTML();
+      Notify.info("Too many matches found. Please enter a more specific name.");
+    } else {
+      clearInnerHTML();
+      renderCountry(response);
     }
-
-    let enteredInputValue = event.target.value.trim();
-    // console.log(response)
-    fetchCountries(enteredInputValue)
-    .then((response) => {
-      if (response.length >= 2 && response.length < 10) {
-        renderCountresList(response)
-      } else if (response.length > 10) {
-        Notify.info("Too many matches found. Please enter a more specific name.")
-      } else {
-        renderCountry(response)
-      }
-    })
-    .catch((error) => Notify.failure("Oops, there is no country with that name"));
-}
-
+  })
+    .catch((error) => {
+      clearInnerHTML();
+      console.log(error);
+      Notify.failure("Oops, there is no country with that name");
+    });
+};
 
 function renderCountresList(countries) {
   const countryListItemMarkup = countries
-  .map((country) => {
-    return `
-    <li class="country-list-item">
-      <div class="country-list-item__wrapper">
-        <img class="country-list-item__flag" src="${country.flags.svg}" alt="Flag of ${country.name.official}">
-        <p class="country-list-item__official-name"><b>${country.name.official}</b></p>
-      </div>
-    </li>
-    `;
-  })
-  .join("");
+    .map((country) => {
+      return `
+      <li class="country-list-item">
+        <div class="country-list-item__wrapper">
+          <img class="country-list-item__flag" src="${country.flags.svg}" alt="Flag of ${country.name.official}">
+          <p class="country-list-item__official-name"><b>${country.name.official}</b></p>
+        </div>
+      </li>
+      `;
+    })
+    .join("");
   refs.countriesList.innerHTML = countryListItemMarkup;
 }
 
@@ -66,5 +77,6 @@ function renderCountry(country) {
       `;
     })
     .join("");
+  
   refs.countryInfoEl.innerHTML = countryInfoMarkup;
 }
